@@ -71,7 +71,11 @@ public class SimpleWebServer extends Thread {
                     sendResponse(200, responseBuffer.toString(), false);
                 } else {
                     String fileName = httpQueryString.replaceFirst("/", "");
-                    fileName = URLDecoder.decode(fileName);
+                    fileName = URLDecoder.decode(fileName, "UTF-8");
+                    int indexOfQ = fileName.indexOf('?');
+                    if (indexOfQ != -1){
+                        fileName = fileName.substring(0,indexOfQ);
+                    }
                     if (new File(fileName).isFile()) {
                         sendResponse(200, fileName, true);
                     } else {
