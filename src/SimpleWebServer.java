@@ -27,7 +27,6 @@ public class SimpleWebServer extends Thread {
                     "</html>";
 
     private Socket connectedClient = null;
-    private BufferedReader inFromClient = null;
     private DataOutputStream outToClient = null;
     private static JCheckBox emulateSlowConnection = new JCheckBox("Emulate slow connection",false);
 
@@ -43,7 +42,7 @@ public class SimpleWebServer extends Thread {
             System.out.println("The Client " +
                     connectedClient.getInetAddress() + ":" + connectedClient.getPort() + " is connected");
 
-            inFromClient = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
+            BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectedClient.getInputStream()));
             outToClient = new DataOutputStream(connectedClient.getOutputStream());
 
             String requestString = inFromClient.readLine();
@@ -53,14 +52,14 @@ public class SimpleWebServer extends Thread {
             String httpMethod = tokenizer.nextToken();
             String httpQueryString = tokenizer.nextToken();
 
-            StringBuffer responseBuffer = new StringBuffer();
+            StringBuilder responseBuffer = new StringBuilder();
             responseBuffer.append("<b> This is the HTTP Server Home Page.... </b><BR>");
             responseBuffer.append("The HTTP Client request is ....<BR>");
 
             System.out.println("The HTTP request string is ....");
             while (inFromClient.ready()) {
                 // Read the HTTP complete HTTP Query
-                responseBuffer.append(requestString + "<BR>");
+                responseBuffer.append(requestString).append("<BR>");
                 System.out.println(requestString);
                 requestString = inFromClient.readLine();
             }
@@ -92,10 +91,10 @@ public class SimpleWebServer extends Thread {
 
     public void sendResponse(int statusCode, String responseString, boolean isFile) throws Exception {
 
-        String statusLine = null;
-        String serverdetails = "Server: Java HTTPServer" + "\r\n";
-        String contentLengthLine = null;
-        String fileName = null;
+        String statusLine;
+        String serverDetails = "Server: Java HTTPServer" + "\r\n";
+        String contentLengthLine;
+        String fileName;
         String contentTypeLine = "Content-Type: text/html" + "\r\n";
         FileInputStream fin = null;
 
@@ -131,7 +130,7 @@ public class SimpleWebServer extends Thread {
         }
 
         outToClient.writeBytes(statusLine);
-        outToClient.writeBytes(serverdetails);
+        outToClient.writeBytes(serverDetails);
         outToClient.writeBytes(contentTypeLine);
         outToClient.writeBytes(contentLengthLine);
         outToClient.writeBytes("Connection: close\r\n");
