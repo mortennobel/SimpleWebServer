@@ -46,47 +46,78 @@ public class SimpleWebServer extends Thread {
             outToClient = new DataOutputStream(connectedClient.getOutputStream());
 
             String requestString = inFromClient.readLine();
-            String headerLine = requestString;
 
-            StringTokenizer tokenizer = new StringTokenizer(headerLine);
+            StringTokenizer tokenizer = new StringTokenizer(requestString);
             String httpMethod = tokenizer.nextToken();
             String httpQueryString = tokenizer.nextToken();
 
-            StringBuilder responseBuffer = new StringBuilder();
-            responseBuffer.append("<b> This is the HTTP Server Home Page.... </b><BR>");
-            responseBuffer.append("The HTTP Client request is ....<BR>");
-
-            System.out.println("The HTTP request string is ....");
             while (inFromClient.ready()) {
-                // Read the HTTP complete HTTP Query
-                responseBuffer.append(requestString).append("<BR>");
-                System.out.println(requestString);
-                requestString = inFromClient.readLine();
+                // Read the HTTP complete HTTP Query (not currently used)
+                inFromClient.readLine();
             }
 
             if (httpMethod.equals("GET")) {
-                if (httpQueryString.equals("/")) {
-                    // The default home page
-                    sendResponse(200, responseBuffer.toString(), false);
+                String fileName = httpQueryString.replaceFirst("/", "");
+                fileName = URLDecoder.decode(fileName, "UTF-8");
+                int indexOfQ = fileName.indexOf('?');
+                if (indexOfQ != -1){
+                    fileName = fileName.substring(0,indexOfQ);
+                }
+                File file = new File(fileName.length()==0?".":fileName);
+                if (file.isDirectory()){
+                    String[] defaultFileNames = {"index.html", "index.htm"};
+                    for (String defaultFilename : defaultFileNames){
+                        File f = new File(file, defaultFilename );
+                        if (f.exists() && f.isFile()){
+                            file = f;
+                            break;
+                        }
+                    }
+                }
+                System.out.println("File is "+file);
+                if (file.isDirectory()){
+                    String directory = buildDirectoryHtml(file, fileName);
+                    sendResponse(200, directory, false);
+                } else if (file.isFile()) {
+                    sendResponse(200, fileName, true);
                 } else {
-                    String fileName = httpQueryString.replaceFirst("/", "");
-                    fileName = URLDecoder.decode(fileName, "UTF-8");
-                    int indexOfQ = fileName.indexOf('?');
-                    if (indexOfQ != -1){
-                        fileName = fileName.substring(0,indexOfQ);
-                    }
-                    if (new File(fileName).isFile()) {
-                        sendResponse(200, fileName, true);
-                    } else {
-                        sendResponse(404, "<b>The Requested resource not found ...." +
-                                "Usage: http://127.0.0.1:5000 or http://127.0.0.1:5000/</b>", false);
-                    }
+                    sendResponse(404, "<b>The Requested resource not found ...." +
+                            "Usage: http://127.0.0.1:5000 or http://127.0.0.1:5000/</b>", false);
                 }
             } else sendResponse(404, "<b>The Requested resource not found ...." +
                     "Usage: http://127.0.0.1:5000 or http://127.0.0.1:5000/</b>", false);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String buildDirectoryHtml(File file, String fileName) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<html><body>");
+        sb.append("<h1>");
+        if (fileName.length()==0){
+            sb.append("Root");
+        } else {
+            sb.append(fileName);
+        }
+        sb.append("</h1>");
+        if (fileName.length()>0){
+            fileName = "/"+fileName;
+
+            String parentFileName = fileName.substring(0,fileName.lastIndexOf('/'));
+            if (parentFileName.length()==0){
+                parentFileName = "/";
+            }
+            sb.append("<a href=\"").append(parentFileName ).append("\">");
+            sb.append("..");
+            sb.append("</a><br>");
+        }
+        for (String f : file.list()){
+            sb.append("<a href=\"").append(fileName).append("/").append(f).append("\">");
+            sb.append(f);
+            sb.append("</a><br>");
+        }
+        return sb.toString();
     }
 
     public void sendResponse(int statusCode, String responseString, boolean isFile) throws Exception {
