@@ -194,7 +194,7 @@ public class SimpleWebServer extends Thread {
 
         ServerSocket Server = new ServerSocket(5000, 10, InetAddress.getByName("127.0.0.1"));
 
-        final JFrame frame = new JFrame("SimpleWebServer");
+        final JFrame frame = new JFrame("SimpleWebServer 1.0");
         Container panel = frame.getContentPane();
         panel.setLayout(new GridLayout(0,1));
         panel.add(new JLabel("TCPServer Waiting for client on port 5000"));
@@ -205,7 +205,7 @@ public class SimpleWebServer extends Thread {
             public void actionPerformed(ActionEvent e) {
                 java.awt.Desktop desktop = java.awt.Desktop.getDesktop();
                 try {
-                    URI uri = new URI( "http://localhost:5000/index.html" );
+                    URI uri = new URI( "http://localhost:5000/" );
                     desktop.browse( uri );
                 } catch (Exception e1) {
                     e1.printStackTrace();
